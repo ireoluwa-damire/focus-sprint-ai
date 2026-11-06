@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusSprint</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4fa;
+            margin: 0;
+            padding: 40px 20px;
+            color: #25243a;
+        }
+
+        .container {
+            max-width: 550px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px #00000010;
+        }
+
+        h1 {
+            color: #6854c5;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 8px;
+        }
+
+        input {
+            flex: 1;
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 11px 15px;
+            border: none;
+            border-radius: 8px;
+            background: #6854c5;
+            color: white;
+            cursor: pointer;
+        }
+
+        .progress {
+            background: #eee;
+            height: 10px;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        #progressBar {
+            background: #6854c5;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        li span {
+            flex: 1;
+            overflow-wrap: anywhere;
+        }
+
+        li.done span {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .delete {
+            background: #e65c68;
+        }
+
+        .stats {
+            color: #777;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>FocusSprint</h1>
+        <p>Small tasks. Real progress.</p>
+
+        <div class="input-area">
+            <input id="taskInput" placeholder="What do you need to do?">
+            <button onclick="addTask()">Add</button>
+        </div>
+
+        <h3>Your progress</h3>
+        <div class="progress">
+            <div id="progressBar"></div>
+        </div>
+
+        <p class="stats" id="stats">0 tasks completed</p>
+
+        <ul id="taskList"></ul>
+    </div>
+
+    <script>
+        let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+        function saveTasks() {
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+            renderTasks();
+        }
+
+        function addTask() {
+            const input = document.getElementById("taskInput");
+            const taskName = input.value.trim();
+
+            if (taskName === "") return;
+
+            tasks.push({
+                name: taskName,
+                completed: false
+            });
+
+            input.value = "";
+            saveTasks();
+        }
+
+        function toggleTask(index) {
+            tasks[index].completed = !tasks[index].completed;
+            saveTasks();
+        }
+
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            saveTasks();
+        }
+
+        function renderTasks() {
+            const list = document.getElementById("taskList");
+            list.innerHTML = "";
+
+            tasks.forEach((task, index) => {
+                const item = document.createElement("li");
+
+                if (task.completed) item.classList.add("done");
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = task.completed;
+                checkbox.onchange = () => toggleTask(index);
+
+                const name = document.createElement("span");
+                name.textContent = task.name;
+
+                const remove = document.createElement("button");
+                remove.textContent = "Delete";
+                remove.className = "delete";
+                remove.onclick = () => deleteTask(index);
+
+                item.append(checkbox, name, remove);
+                list.appendChild(item);
+            });
+
+            const completed = tasks.filter(t => t.completed).length;
+            const percentage = tasks.length
+                ? (completed / tasks.length) * 100
+                : 0;
+
+            document.getElementById("progressBar").style.width =
+                percentage + "%";
+
+            document.getElementById("stats").textContent =
+                `${completed} of ${tasks.length} tasks completed`;
+        }
+
+        document.getElementById("taskInput")
+            .addEventListener("keydown", function (event) {
+                if (event.key === "Enter") addTask();
+            });
+
+        renderTasks();
+    </script>
+
+</body>
+
+</html>
